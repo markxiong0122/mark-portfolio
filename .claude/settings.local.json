@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__zai-mcp-server__ui_to_artifact",
+      "mcp__web-reader__webReader"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
