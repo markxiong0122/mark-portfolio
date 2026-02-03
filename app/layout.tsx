@@ -27,6 +27,9 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Mark Xiong - Entrepreneur & Builder",
   description: "Portfolio of Mark Xiong - CS major, builder, and creator",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
