@@ -229,7 +229,7 @@ export default function Home() {
               </motion.p>
               <div className="vanishing-point-wrapper">
                 <iframe
-                  src="/embeds/vanishing-point.html"
+                  src="/vanishing-point-embed.html"
                   title="Vanishing Point — Progressive Abstraction of Human Presence"
                 />
               </div>

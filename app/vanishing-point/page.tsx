@@ -1,7 +1,7 @@
 export default function VanishingPointPage() {
   return (
     <iframe
-      src="/embeds/vanishing-point.html"
+      src="/vanishing-point-embed.html"
       title="Vanishing Point — Progressive Abstraction of Human Presence"
       style={{
         position: "fixed",
