@@ -1,7 +1,15 @@
+import fs from "fs";
+import path from "path";
+
 export default function VanishingPointPage() {
+  const htmlContent = fs.readFileSync(
+    path.join(process.cwd(), "public", "vanishing-point-embed.html"),
+    "utf-8"
+  );
+
   return (
     <iframe
-      src="/vanishing-point-embed.html"
+      srcDoc={htmlContent}
       title="Vanishing Point — Progressive Abstraction of Human Presence"
       style={{
         position: "fixed",
