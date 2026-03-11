@@ -9,7 +9,9 @@
       "Bash(git push:*)",
       "Bash(npm run:*)",
       "Bash(vercel --version 2>&1)",
-      "Bash(vercel --prod 2>&1)"
+      "Bash(vercel --prod 2>&1)",
+      "Bash(ls /Users/mark/projects/mark-portfolio/public/vanishing-point* && grep \"vanishing-point\" /Users/mark/projects/mark-portfolio/app/vanishing-point/page.tsx)",
+      "WebFetch(domain:www.mxiong.xyz)"
     ],
     "deny": [],
     "ask": []

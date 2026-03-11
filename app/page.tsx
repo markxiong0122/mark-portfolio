@@ -251,7 +251,7 @@ export default function Home() {
                 style={{ marginTop: "1.5rem" }}
               >
                 <iframe
-                  src="/vanishing-point-embed.html"
+                  src="/vanishing-point/"
                   style={{
                     width: "100%",
                     height: "600px",
