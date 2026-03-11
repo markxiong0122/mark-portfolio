@@ -26,25 +26,27 @@ export default function Home() {
   const sectionParallax = useTransform(scrollY, (v) => v * -0.5);
 
   // Staggered entry animation configs
+  const ease = [0.16, 1, 0.3, 1] as const;
+
   const staggerIn = (delay: number = 0) => ({
     initial: { opacity: 0, x: -30 } as const,
     whileInView: { opacity: 1, x: 0 } as const,
     viewport: { once: true } as const,
-    transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.5, delay, ease },
   });
 
   const staggerInUp = (delay: number = 0) => ({
     initial: { opacity: 0, y: 30 } as const,
     whileInView: { opacity: 1, y: 0 } as const,
     viewport: { once: true } as const,
-    transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.5, delay, ease },
   });
 
   const dropIn = (delay: number = 0) => ({
     initial: { opacity: 0, y: -20 } as const,
     whileInView: { opacity: 1, y: 0 } as const,
     viewport: { once: true } as const,
-    transition: { duration: 0.4, delay, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.4, delay, ease },
   });
 
   return (
@@ -69,7 +71,7 @@ export default function Home() {
               alt="Mark Xiong"
               initial={{ opacity: 0, scale: 1.05 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 1, delay: 0.3, ease }}
             />
           </div>
 
@@ -82,7 +84,7 @@ export default function Home() {
             }}
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 1, delay: 0.1, ease }}
           >
             Mark<br />Xiong
           </motion.h1>
@@ -163,7 +165,7 @@ export default function Home() {
                 initial={{ opacity: 0, x: -40 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, delay: index * 0.08, ease }}
               >
                 <ProjectCard project={project} />
               </motion.div>
@@ -200,7 +202,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 + index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, delay: 0.2 + index * 0.08, ease }}
               >
                 <TrackCard track={track} />
               </motion.div>
