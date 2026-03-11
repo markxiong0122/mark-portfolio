@@ -21,10 +21,15 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <span
             key={index}
             style={{
-              fontWeight: 400,
-              color: "var(--near-black)",
-              fontFamily: "var(--font-cormorant)",
-              fontSize: "1.25em",
+              fontWeight: 500,
+              color: "var(--black)",
+              fontFamily: "'Clash Display', sans-serif",
+              fontSize: "1.1em",
+              textTransform: "uppercase" as const,
+              letterSpacing: "0.05em",
+              display: "block" as const,
+              marginTop: "1.5rem",
+              marginBottom: "0.5rem",
             }}
           >
             {boldText}
@@ -77,7 +82,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
               onClick={() => setIsExpanded(!isExpanded)}
               aria-expanded={isExpanded}
             >
-              {isExpanded ? "Close" : "Read case study"}
+              {isExpanded ? "[\u2212] Case Study" : "[+] Case Study"}
             </button>
             {isExpanded && project.content && (
               <div className="project-details expanded">
