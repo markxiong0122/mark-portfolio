@@ -11,7 +11,17 @@
       "Bash(vercel --version 2>&1)",
       "Bash(vercel --prod 2>&1)",
       "Bash(ls /Users/mark/projects/mark-portfolio/public/vanishing-point* && grep \"vanishing-point\" /Users/mark/projects/mark-portfolio/app/vanishing-point/page.tsx)",
-      "WebFetch(domain:www.mxiong.xyz)"
+      "WebFetch(domain:www.mxiong.xyz)",
+      "WebFetch(domain:github.com)",
+      "mcp__plugin_episodic-memory_episodic-memory__search",
+      "Bash(find /Users/mark/projects/mark-portfolio/public -type f -name \"*.svg\" -o -name \"*.jpg\" -o -name \"*.png\" -o -name \"*.mp3\" 2>/dev/null | head -20)",
+      "Bash(ls -la /Users/mark/projects/mark-portfolio/ | grep -E \"\\\\.json$|\\\\.config\")",
+      "Bash(git checkout:*)",
+      "Bash(sleep 3 && open http://localhost:3000)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -L http://localhost:3000/vanishing-point/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/vanishing-point/index.html)",
+      "Bash(git tag:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/vanishing-point/embed.html)"
     ],
     "deny": [],
     "ask": []
