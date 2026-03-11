@@ -176,7 +176,7 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <span className="section-label">03 / sound</span>
+              <span className="section-label">03 / art</span>
               <motion.div
                 className="section-line"
                 initial={{ scaleX: 0 }}
@@ -215,6 +215,53 @@ export default function Home() {
                 <TrackCard track={track} />
               </motion.div>
             ))}
+
+            {/* Vanishing Point */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <motion.h2
+                className="section-title"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                style={{ marginTop: "3rem" }}
+              >
+                Vanishing Point
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                Human presence is always there but receding — tracing the arc of
+                creative computing toward a point where the maker disappears into
+                the system itself.
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                style={{ marginTop: "1.5rem" }}
+              >
+                <iframe
+                  src="/vanishing-point.html"
+                  style={{
+                    width: "100%",
+                    height: "600px",
+                    border: "none",
+                    borderRadius: "4px",
+                  }}
+                  title="Vanishing Point — Progressive Abstraction of Human Presence"
+                />
+              </motion.div>
+            </motion.div>
           </section>
 
           {/* Contact */}

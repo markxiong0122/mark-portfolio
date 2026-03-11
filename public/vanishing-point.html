@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progressive Abstraction of Human Presence — Graph View</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0f;
+    --text: #c8c8d0;
+    --title: #e0e0e8;
+    --subtitle: #666;
+    --bar-bg: rgba(10,10,15,0.95);
+    --bar-bg-end: rgba(10,10,15,0);
+    --tooltip-bg: rgba(18,18,28,0.96);
+    --tooltip-border: rgba(255,255,255,0.08);
+    --tooltip-title: #e8e8f0;
+    --tooltip-desc: #aaa;
+    --tooltip-meta: #888;
+    --btn-bg: rgba(255,255,255,0.06);
+    --btn-border: rgba(255,255,255,0.1);
+    --btn-text: #888;
+    --btn-hover-bg: rgba(255,255,255,0.1);
+    --btn-hover-text: #ccc;
+    --legend-text: #888;
+    --chrono-stroke: rgba(255,255,255,0.12);
+    --cross-stroke: rgba(255,200,100,0.4);
+    --reading-stroke: rgba(240,192,64,0.3);
+    --edge-label-fill: #777;
+  }
+
+  body.light {
+    --bg: #f5f3ef;
+    --text: #333;
+    --title: #1a1a1a;
+    --subtitle: #999;
+    --bar-bg: rgba(245,243,239,0.95);
+    --bar-bg-end: rgba(245,243,239,0);
+    --tooltip-bg: rgba(255,255,255,0.97);
+    --tooltip-border: rgba(0,0,0,0.1);
+    --tooltip-title: #1a1a1a;
+    --tooltip-desc: #555;
+    --tooltip-meta: #888;
+    --btn-bg: rgba(0,0,0,0.05);
+    --btn-border: rgba(0,0,0,0.12);
+    --btn-text: #777;
+    --btn-hover-bg: rgba(0,0,0,0.1);
+    --btn-hover-text: #333;
+    --legend-text: #777;
+    --chrono-stroke: rgba(0,0,0,0.15);
+    --cross-stroke: rgba(180,120,30,0.45);
+    --reading-stroke: rgba(180,140,30,0.35);
+    --edge-label-fill: #888;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    transition: background 0.4s, color 0.4s;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .title-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(to bottom, var(--bar-bg), var(--bar-bg-end));
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .title-bar h1 {
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--title);
+  }
+
+  .title-bar p {
+    font-size: 0.6rem;
+    color: var(--subtitle);
+    margin-top: 0.25rem;
+    letter-spacing: 0.04em;
+  }
+
+  .legend {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.04em;
+    color: var(--legend-text);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-diamond {
+    width: 10px;
+    height: 10px;
+    transform: rotate(45deg);
+    flex-shrink: 0;
+    border: 1.5px solid var(--legend-text);
+    background: transparent;
+  }
+
+  .tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--tooltip-bg);
+    border: 1px solid var(--tooltip-border);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    max-width: 320px;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .tooltip.visible { opacity: 1; }
+
+  .tooltip-title {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--tooltip-title);
+    margin-bottom: 0.2rem;
+  }
+
+  .tooltip-meta {
+    font-size: 0.55rem;
+    color: var(--tooltip-meta);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.03em;
+  }
+
+  .tooltip-desc {
+    font-size: 0.6rem;
+    line-height: 1.5;
+    color: var(--tooltip-desc);
+  }
+
+  .tooltip-layer {
+    display: inline-block;
+    font-size: 0.5rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.1rem 0.35rem;
+    border-radius: 2px;
+    margin-bottom: 0.4rem;
+  }
+
+  .edge-label {
+    font-family: 'JetBrains Mono', monospace;
+    fill: var(--edge-label-fill);
+    font-size: 7px;
+    pointer-events: none;
+  }
+
+  .time-tick text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    fill: var(--subtitle);
+    letter-spacing: 0.04em;
+  }
+
+  .time-tick line {
+    stroke: var(--chrono-stroke);
+    stroke-dasharray: 2,4;
+  }
+
+  .time-axis-line {
+    stroke: var(--chrono-stroke);
+  }
+
+  .time-era {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px;
+    fill: var(--subtitle);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+
+  .controls {
+    position: fixed;
+    top: 1rem;
+    right: 1.5rem;
+    z-index: 10;
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .controls button {
+    background: var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    color: var(--btn-text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+  }
+
+  .controls button:hover {
+    background: var(--btn-hover-bg);
+    color: var(--btn-hover-text);
+  }
+</style>
+</head>
+<body class="light">
+
+<div class="title-bar">
+  <h1>The Progressive Abstraction of Human Presence in Creative Computing</h1>
+  <p>Mark Xiong · MAAD 11600 · Winter 2026 — Drag nodes · Scroll to zoom · Hover for details</p>
+</div>
+
+<div class="controls">
+  <button onclick="toggleTheme()">☀ / ☽</button>
+  <button onclick="resetZoom()">Reset</button>
+  <button onclick="toggleLabels()">Labels</button>
+  <button onclick="toggleEdgeLabels()">Edge Labels</button>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#4ecdc4;"></div>Layer 1 — Physical Co-Presence</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#667eea;"></div>Layer 2 — Sensor / Interface</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e8556d;"></div>Layer 3 — Data / Pattern</div>
+  <div class="legend-item"><div class="legend-diamond" style="border-color:#f0c040;"></div>Course Reading</div>
+  <div class="legend-item" style="margin-top:0.3rem;"><div class="legend-dot" style="background:#888;width:6px;height:6px;"></div><span style="margin-right:0.2rem;"></span><div class="legend-dot" style="background:#888;width:12px;height:12px;"></div>Node size = cross-layer connections</div>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tooltip-layer" id="tooltip-layer"></div>
+  <div class="tooltip-title" id="tooltip-title"></div>
+  <div class="tooltip-meta" id="tooltip-meta"></div>
+  <div class="tooltip-desc" id="tooltip-desc"></div>
+</div>
+
+<svg id="graph"></svg>
+
+<script>
+const nodes = [
+  // Layer 1 — Physical Co-Presence
+  { id: "kaprow", label: "18 Happenings\nin 6 Parts", artist: "Allan Kaprow", year: 1959, layer: 1, type: "work",
+    meta: "Performance, mixed media environments",
+    desc: "Audience received instruction cards dictating movement between three rooms. Presence itself became the artistic material — the body is fully visible, co-present, in control.",
+    url: "http://www.medienkunstnetz.de/works/18-happenings-in-6-parts/" },
+  { id: "paik", label: "TV Buddha", artist: "Nam June Paik", year: 1974, layer: 1, type: "work",
+    meta: "Closed-circuit video, bronze sculpture, monitor",
+    desc: "A Buddha statue faces its live image on a monitor. The feedback loop is entirely visible — no computation hides the mediation. The body confronts its electronic double in real time.",
+    url: "https://njpart.ggcf.kr/collections/205" },
+  { id: "textrain", label: "Text Rain", artist: "Utterback + Achituv", year: 1999, layer: 1, type: "work",
+    meta: "Interactive installation, camera, projection",
+    desc: "Falling letters land on participants' silhouettes. The body is still physically legible but now functions as an input surface. Transitional: co-present but beginning to serve a computational role.",
+    url: "http://camilleutterback.com/projects/text-rain/" },
+  { id: "blast", label: "Can You See\nMe Now?", artist: "Blast Theory", year: 2001, layer: 1, type: "work",
+    meta: "Mixed reality game, GPS, Wi-Fi",
+    desc: "Runners on city streets chase online players via a virtual map. Physical bodies and digital avatars overlap but online players only see GPS traces. Presence splits from the body.",
+    url: "https://www.blasttheory.co.uk/projects/can-you-see-me-now/" },
+  { id: "rplace", label: "r/place", artist: "Reddit", year: 2017, layer: 1, type: "work",
+    meta: "Collaborative pixel canvas, web platform",
+    desc: "Millions place one pixel at a time, negotiating territory through collective action. Each body is reduced to a single click. The individual is invisible; the crowd is everything.",
+    url: "https://en.wikipedia.org/wiki/R/place" },
+  { id: "teamlab", label: "Borderless", artist: "teamLab", year: 2018, layer: 1, type: "work",
+    meta: "Immersive installation, projectors, sensors",
+    desc: "Visitors walk through flowing projections that respond to movement. The body is immersed but the system's response is diffuse — physically co-present but experientially dissolved into spectacle.",
+    url: "https://www.teamlab.art/e/borderless-odaiba/" },
+
+  // Layer 2 — Sensor / Interface
+  { id: "krueger", label: "Videoplace", artist: "Myron Krueger", year: 1975, layer: 2, type: "work",
+    meta: "Interactive environment, cameras, projectors, custom hardware",
+    desc: "Camera captures the participant's silhouette and projects it into a shared virtual space. The body is recognizable but translated into real-time signal — the first major step from co-presence to mediation.",
+    url: "http://www.medienkunstnetz.de/works/videoplace/" },
+  { id: "rokeby", label: "Very Nervous\nSystem", artist: "David Rokeby", year: 1986, layer: 2, type: "work",
+    meta: "Video camera, custom software, synthesizers",
+    desc: "Body movement captured by camera, converted into real-time sound. You hear yourself but don't see yourself. The body becomes pure signal: gesture in, sound out.",
+    url: "http://www.davidrokeby.com/vns.html" },
+  { id: "shaw", label: "The Legible\nCity", artist: "Jeffrey Shaw", year: 1989, layer: 2, type: "work",
+    meta: "Stationary bicycle, projection, custom software",
+    desc: "Pedal a stationary bike to navigate a virtual city of 3D text. Physical exertion becomes data input for digital movement — the body's effort is translated into spatial navigation.",
+    url: "https://www.jeffreyshawcompendium.com/portfolio/legible-city/" },
+  { id: "davies", label: "Osmose", artist: "Char Davies", year: 1995, layer: 2, type: "work",
+    meta: "VR headset, motion-tracking vest, breath sensor",
+    desc: "Breathing controls vertical movement. Inhale to rise, exhale to descend. The body's most involuntary signal becomes the sole interface. The body is inescapable.",
+    url: "https://www.immersence.com/osmose/" },
+  { id: "rozin", label: "Wooden\nMirror", artist: "Daniel Rozin", year: 1999, layer: 2, type: "work",
+    meta: "830 wooden tiles, motors, camera, custom software",
+    desc: "Camera captures the viewer and tilts hundreds of tiles to approximate the image. The body is reflected as a low-resolution pattern — mechanical abstraction of the human form.",
+    url: "http://www.smoothware.com/danny/woodenmirror.html" },
+  { id: "pulse", label: "Pulse Room", artist: "Rafael Lozano-Hemmer", year: 2006, layer: 2, type: "work",
+    meta: "Heart-rate sensor, 300 lightbulbs, custom software",
+    desc: "Grip a sensor; your heartbeat flashes a lightbulb. As new visitors arrive, older recordings shift and disappear. The body reduced to its most involuntary signal, then anonymized.",
+    url: "https://www.lozano-hemmer.com/pulse_room.php" },
+  { id: "sensorify", label: "Sensorify", artist: "Steve Zafeiriou", year: 2023, layer: 2, type: "work",
+    meta: "Facial recognition, projection, algorithm",
+    desc: "An algorithm captures facial expressions and generates a mimicking image. The face — the most identity-rich surface — becomes an input parameter. One step from becoming a training sample.",
+    url: "https://stevezafeiriou.com/sensorify/" },
+
+  // Layer 3 — Data / Statistical Pattern
+  { id: "aaron", label: "AARON", artist: "Harold Cohen", year: 1973, layer: 3, type: "work",
+    meta: "Software, plotters, printers (1973–2016)",
+    desc: "Cohen delegated more drawing decisions to AARON over four decades. The human author's hand retreats as the system's autonomy grows. The artist becomes a curator of parameters.",
+    url: "https://computerhistory.org/blog/harold-cohen-and-aaron-a-40-year-collaboration/" },
+  { id: "mccoy", label: "Every Shot\nEvery Episode", artist: "Jennifer + Kevin McCoy", year: 2001, layer: 3, type: "work",
+    meta: "Software, database, video",
+    desc: "Starsky & Hutch reorganized by database categories. Narrative dissolves; pattern emerges. The viewer confronts the statistical skeleton of their media consumption.",
+    url: "https://www.digiart21.org/art/every-shot-every-episode" },
+  { id: "legrady", label: "Pockets Full\nof Memories", artist: "George Legrady", year: 2001, layer: 3, type: "work",
+    meta: "Interactive installation, scanner, self-organizing map",
+    desc: "Visitors scan objects; a self-organizing map clusters them. Each participant contributes voluntarily, but the system decides classification. Human as data source; algorithm as author.",
+    url: "https://www.georgelegrady.com/" },
+  { id: "koblin", label: "The Sheep\nMarket", artist: "Aaron Koblin", year: 2006, layer: 3, type: "work",
+    meta: "Amazon Mechanical Turk, web",
+    desc: "10,000 workers paid $0.02 each to draw a sheep. Each hand is present but each identity erased — anonymous micro-laborers. Structurally essential yet individually invisible.",
+    url: "https://www.aaronkoblin.com/work/thesheepmarket/" },
+  { id: "paglen", label: "ImageNet\nRoulette", artist: "Trevor Paglen", year: 2019, layer: 3, type: "work",
+    meta: "Web application, machine learning classifier",
+    desc: "Upload a selfie; the system classifies you using biased ImageNet categories. Millions of faces absorbed into training data. The human is not a participant — they are training data, retroactively.",
+    url: "https://paglen.studio/2020/04/29/imagenet-roulette/" },
+  { id: "anadol", label: "Machine\nHallucination", artist: "Refik Anadol", year: 2019, layer: 3, type: "work",
+    meta: "AI data sculpture, GAN, projection",
+    desc: "100M+ photographs of NYC fed into a GAN. No single photographer visible — millions of perspectives digested into a statistical dream. The individual vanishes into raw material.",
+    url: "https://refikanadol.com/works/machine-hallucination/" },
+  { id: "rafman", label: "Counterfeit\nPoast", artist: "Jon Rafman", year: 2024, layer: 3, type: "work",
+    meta: "Video, AI-generated imagery",
+    desc: "AI-generated images of glitchy faces, narrated in synthetic voice. The humans depicted may not be real — patterns from billions of images. Human presence fully metabolized into statistical residue.",
+    url: "https://jonrafman.com/" },
+
+  // Readings
+  { id: "r_kaprow", label: "Kaprow\nHappenings", artist: "Allan Kaprow", year: null, layer: 1, type: "reading",
+    desc: "Art as event rather than object. The audience must participate for the work to exist." },
+  { id: "r_joncates", label: "Stability Isn't\nEverything", artist: "jonCates et al.", year: null, layer: 1, type: "reading",
+    desc: "Computing hardware is unstable and expressive. Insists on the material body of the machine." },
+  { id: "r_dinkla", label: "Participation\nto Interaction", artist: "Söke Dinkla", year: null, layer: 2, type: "reading",
+    desc: "The shift from Happenings to sensor-mediated dialogue. Questions whether interactive systems grant or script agency." },
+  { id: "r_galloway", label: "JODI's\nInfrastructure", artist: "Alexander Galloway", year: null, layer: 2, type: "reading",
+    desc: "Content dissolves into context. The medium's infrastructure is the real artistic material." },
+  { id: "r_paul", label: "Database as\nCultural Form", artist: "Christiane Paul", year: null, layer: 3, type: "reading",
+    desc: "Databases generate meaning through structure, not narrative. The individual entry loses identity in favor of patterns." },
+  { id: "r_crawford", label: "Earth / Eating\nthe Future", artist: "Kate Crawford", year: null, layer: 3, type: "reading",
+    desc: "AI depends on physical extraction. AI media is metabolic — ingesting human culture, excreting synthetic content. The endpoint of abstraction." },
+];
+
+const links = [
+  // Within-layer chronological
+  { source: "kaprow", target: "paik", type: "chrono" },
+  { source: "paik", target: "textrain", type: "chrono" },
+  { source: "textrain", target: "blast", type: "chrono" },
+  { source: "blast", target: "rplace", type: "chrono" },
+  { source: "rplace", target: "teamlab", type: "chrono" },
+
+  { source: "krueger", target: "rokeby", type: "chrono" },
+  { source: "rokeby", target: "shaw", type: "chrono" },
+  { source: "shaw", target: "davies", type: "chrono" },
+  { source: "davies", target: "rozin", type: "chrono" },
+  { source: "rozin", target: "pulse", type: "chrono" },
+  { source: "pulse", target: "sensorify", type: "chrono" },
+
+  { source: "aaron", target: "mccoy", type: "chrono" },
+  { source: "mccoy", target: "legrady", type: "chrono" },
+  { source: "legrady", target: "koblin", type: "chrono" },
+  { source: "koblin", target: "paglen", type: "chrono" },
+  { source: "paglen", target: "anadol", type: "chrono" },
+  { source: "anadol", target: "rafman", type: "chrono" },
+
+  // Cross-layer (the argument)
+  { source: "kaprow", target: "krueger", type: "cross", label: "embodied action → sensor input" },
+  { source: "paik", target: "krueger", type: "cross", label: "video loop → interactive feedback" },
+  { source: "textrain", target: "pulse", type: "cross", label: "silhouette → biometric" },
+  { source: "pulse", target: "koblin", type: "cross", label: "heartbeat → anonymous data" },
+  { source: "legrady", target: "paglen", type: "cross", label: "archive → training set" },
+  { source: "sensorify", target: "anadol", type: "cross", label: "facial capture → model input" },
+  { source: "kaprow", target: "koblin", type: "cross", label: "happening → distributed labor" },
+  { source: "rplace", target: "paglen", type: "cross", label: "pixels → behavioral dataset" },
+  { source: "teamlab", target: "anadol", type: "cross", label: "spectacle → hallucination" },
+
+  // Reading connections
+  { source: "r_kaprow", target: "kaprow", type: "reading" },
+  { source: "r_joncates", target: "textrain", type: "reading" },
+  { source: "r_dinkla", target: "krueger", type: "reading" },
+  { source: "r_dinkla", target: "rokeby", type: "reading" },
+  { source: "r_galloway", target: "rozin", type: "reading" },
+  { source: "r_paul", target: "mccoy", type: "reading" },
+  { source: "r_paul", target: "legrady", type: "reading" },
+  { source: "r_crawford", target: "paglen", type: "reading" },
+  { source: "r_crawford", target: "anadol", type: "reading" },
+];
+
+const layerColors = {
+  1: "#4ecdc4",
+  2: "#667eea",
+  3: "#e8556d",
+};
+
+const layerNames = {
+  1: "Layer 1 — Physical Co-Presence",
+  2: "Layer 2 — Sensor / Interface",
+  3: "Layer 3 — Data / Statistical Pattern",
+};
+
+const layerBg = {
+  1: "rgba(78,205,196,0.15)",
+  2: "rgba(102,126,234,0.15)",
+  3: "rgba(232,85,109,0.15)",
+};
+
+const width = window.innerWidth;
+const height = window.innerHeight;
+
+const svg = d3.select("#graph")
+  .attr("viewBox", [0, 0, width, height]);
+
+const g = svg.append("g");
+
+const zoom = d3.zoom()
+  .scaleExtent([0.3, 4])
+  .on("zoom", (event) => g.attr("transform", event.transform));
+
+svg.call(zoom);
+
+const margin = { left: 140, right: 60, top: 80, bottom: 60 };
+const minYear = 1955;
+const maxYear = 2028;
+
+const timeScale = d3.scaleLinear()
+  .domain([minYear, maxYear])
+  .range([margin.left, width - margin.right]);
+
+// Draw time axis (in a separate group so it doesn't move with zoom — we'll re-add in g)
+const axisG = g.append("g").attr("class", "time-axis");
+
+// Axis line
+axisG.append("line")
+  .attr("class", "time-axis-line")
+  .attr("x1", timeScale(minYear))
+  .attr("y1", height - margin.bottom)
+  .attr("x2", timeScale(maxYear))
+  .attr("y2", height - margin.bottom)
+  .attr("stroke-width", 1);
+
+// Decade ticks + vertical gridlines
+const decades = [1960, 1970, 1980, 1990, 2000, 2010, 2020];
+decades.forEach(year => {
+  const x = timeScale(year);
+  axisG.append("g").attr("class", "time-tick")
+    .call(g => {
+      g.append("line")
+        .attr("x1", x).attr("y1", margin.top + 20)
+        .attr("x2", x).attr("y2", height - margin.bottom)
+        .attr("stroke-width", 0.5);
+      g.append("text")
+        .attr("x", x).attr("y", height - margin.bottom + 18)
+        .attr("text-anchor", "middle")
+        .text(year);
+    });
+});
+
+// Era labels along bottom
+const eras = [
+  { label: "Happenings / Video", start: 1958, end: 1978 },
+  { label: "Interactive Systems", start: 1978, end: 1998 },
+  { label: "Net / Database", start: 1998, end: 2012 },
+  { label: "AI / Data", start: 2012, end: 2026 },
+];
+eras.forEach(era => {
+  const cx = timeScale((era.start + era.end) / 2);
+  axisG.append("text")
+    .attr("class", "time-era")
+    .attr("x", cx)
+    .attr("y", height - margin.bottom + 32)
+    .attr("text-anchor", "middle")
+    .text(era.label);
+});
+
+// Layer band labels on the left
+const layerLabels = [
+  { layer: 1, label: "Body", y: height * 0.15 + (3 - 1) * (height * 0.25) },
+  { layer: 2, label: "Signal", y: height * 0.15 + (3 - 2) * (height * 0.25) },
+  { layer: 3, label: "Data", y: height * 0.15 + (3 - 3) * (height * 0.25) },
+];
+layerLabels.forEach(ll => {
+  g.append("text")
+    .attr("x", margin.left - 30)
+    .attr("y", ll.y)
+    .attr("text-anchor", "end")
+    .attr("dominant-baseline", "middle")
+    .attr("font-family", "'JetBrains Mono', monospace")
+    .attr("font-size", "9px")
+    .attr("fill", layerColors[ll.layer])
+    .attr("opacity", 0.6)
+    .attr("letter-spacing", "0.08em")
+    .text(ll.label.toUpperCase());
+});
+
+// Horizontal dashed layer separators
+[1.5, 2.5].forEach(mid => {
+  const y = height * 0.15 + (3 - mid) * (height * 0.25);
+  g.append("line")
+    .attr("x1", margin.left)
+    .attr("x2", width - margin.right)
+    .attr("y1", y).attr("y2", y)
+    .attr("stroke", "var(--chrono-stroke)")
+    .attr("stroke-dasharray", "3,6")
+    .attr("stroke-width", 0.5)
+    .attr("opacity", 0.5);
+});
+
+const simulation = d3.forceSimulation(nodes)
+  .force("link", d3.forceLink(links).id(d => d.id).distance(d => {
+    if (d.type === "reading") return 50;
+    if (d.type === "cross") return 160;
+    return 80;
+  }).strength(d => {
+    if (d.type === "reading") return 0.8;
+    if (d.type === "cross") return 0.1;
+    return 0.35;
+  }))
+  .force("charge", d3.forceManyBody().strength(d => d.type === "reading" ? -150 : -300))
+  .force("y", d3.forceY(d => {
+    return height * 0.15 + (3 - d.layer) * (height * 0.25);
+  }).strength(0.25))
+  .force("x", d3.forceX(d => {
+    if (d.type === "reading") {
+      // Place readings near the average year of their connected works
+      const connected = links.filter(l => l.type === "reading" &&
+        ((l.source.id || l.source) === d.id || (l.target.id || l.target) === d.id));
+      const targetIds = connected.map(l => {
+        const sid = l.source.id || l.source;
+        return sid === d.id ? (l.target.id || l.target) : sid;
+      });
+      const targetNodes = nodes.filter(n => targetIds.includes(n.id) && n.year);
+      if (targetNodes.length > 0) {
+        const avgYear = targetNodes.reduce((s, n) => s + n.year, 0) / targetNodes.length;
+        return timeScale(avgYear);
+      }
+      return width / 2;
+    }
+    if (!d.year) return width / 2;
+    return timeScale(d.year);
+  }).strength(0.3))
+  .force("collision", d3.forceCollide().radius(d => d.type === "reading" ? 18 : 28));
+
+function getStroke(type) {
+  const s = getComputedStyle(document.body);
+  if (type === "cross") return s.getPropertyValue('--cross-stroke').trim();
+  if (type === "reading") return s.getPropertyValue('--reading-stroke').trim();
+  return s.getPropertyValue('--chrono-stroke').trim();
+}
+
+// Edges
+const link = g.append("g")
+  .selectAll("line")
+  .data(links)
+  .join("line")
+  .attr("stroke", d => getStroke(d.type))
+  .attr("stroke-width", d => d.type === "cross" ? 1.8 : 1)
+  .attr("stroke-dasharray", d => d.type === "cross" ? "4,3" : d.type === "reading" ? "2,3" : "none");
+
+// Edge labels
+const edgeLabel = g.append("g")
+  .selectAll("text")
+  .data(links.filter(d => d.type === "cross"))
+  .join("text")
+  .attr("class", "edge-label")
+  .text(d => d.label)
+  .attr("text-anchor", "middle")
+  .style("opacity", 0);
+
+let showEdgeLabels = false;
+let showLabels = true;
+
+// Node groups
+const node = g.append("g")
+  .selectAll("g")
+  .data(nodes)
+  .join("g")
+  .call(d3.drag()
+    .on("start", dragstarted)
+    .on("drag", dragged)
+    .on("end", dragended));
+
+// Reading nodes — diamond shape
+node.filter(d => d.type === "reading")
+  .append("rect")
+  .attr("width", 12)
+  .attr("height", 12)
+  .attr("x", -6)
+  .attr("y", -6)
+  .attr("transform", "rotate(45)")
+  .attr("fill", "transparent")
+  .attr("stroke", "#f0c040")
+  .attr("stroke-width", 1.5)
+  .attr("opacity", 0.7);
+
+// Compute node radius based on cross-layer connections
+function nodeRadius(d) {
+  const crossCount = links.filter(l =>
+    ((l.source.id || l.source) === d.id || (l.target.id || l.target) === d.id) && l.type === "cross"
+  ).length;
+  return 6 + crossCount * 2;
+}
+
+// Work nodes — circles with glow
+node.filter(d => d.type === "work")
+  .append("circle")
+  .attr("r", d => nodeRadius(d))
+  .attr("fill", d => layerColors[d.layer])
+  .attr("opacity", 0.85)
+  .attr("stroke", d => layerColors[d.layer])
+  .attr("stroke-width", 0.5)
+  .attr("stroke-opacity", 0.3);
+
+// Outer glow for works
+node.filter(d => d.type === "work")
+  .append("circle")
+  .attr("r", d => nodeRadius(d) + 6)
+  .attr("fill", d => layerColors[d.layer])
+  .attr("opacity", 0.06);
+
+// Labels — positioned BELOW the node with clear gap
+const labels = node.append("text")
+  .attr("text-anchor", "middle")
+  .attr("fill", d => d.type === "reading" ? "#f0c040" : layerColors[d.layer])
+  .attr("font-family", "'JetBrains Mono', monospace")
+  .attr("font-size", d => d.type === "reading" ? "7px" : "8px")
+  .attr("opacity", d => d.type === "reading" ? 0.6 : 0.8)
+  .each(function(d) {
+    const lines = d.label.split("\n");
+    const el = d3.select(this);
+    const gap = d.type === "reading" ? 20 : nodeRadius(d) + 18;
+    el.text("");
+    lines.forEach((line, i) => {
+      el.append("tspan")
+        .attr("x", 0)
+        .attr("dy", i === 0 ? gap : "1.15em")
+        .text(line);
+    });
+  });
+
+// Year sublabels — below the title with clear spacing
+node.filter(d => d.type === "work" && d.year)
+  .append("text")
+  .attr("text-anchor", "middle")
+  .attr("fill", d => layerColors[d.layer])
+  .attr("font-family", "'JetBrains Mono', monospace")
+  .attr("font-size", "6px")
+  .attr("opacity", 0.35)
+  .each(function(d) {
+    const lines = d.label.split("\n").length;
+    const offset = nodeRadius(d) + 18 + lines * 10 + 6;
+    d3.select(this).attr("dy", offset).text(d.year);
+  });
+
+// Tooltip
+const tooltip = document.getElementById("tooltip");
+const tooltipTitle = document.getElementById("tooltip-title");
+const tooltipMeta = document.getElementById("tooltip-meta");
+const tooltipDesc = document.getElementById("tooltip-desc");
+const tooltipLayer = document.getElementById("tooltip-layer");
+
+node.on("mouseenter", (event, d) => {
+  const layerColor = layerColors[d.layer];
+  tooltipTitle.textContent = d.type === "reading"
+    ? `${d.artist} — "${d.label.replace(/\n/g, ' ')}"`
+    : `${d.artist} — ${d.label.replace(/\n/g, ' ')}`;
+  tooltipMeta.textContent = d.meta || (d.type === "reading" ? "Course Reading" : "");
+  tooltipDesc.textContent = d.desc;
+  tooltipLayer.textContent = d.type === "reading" ? "Reading" : layerNames[d.layer];
+  tooltipLayer.style.background = d.type === "reading" ? "rgba(240,192,64,0.2)" : layerBg[d.layer];
+  tooltipLayer.style.color = d.type === "reading" ? "#f0c040" : layerColor;
+  tooltip.classList.add("visible");
+
+  // Highlight connected
+  const connectedIds = new Set();
+  connectedIds.add(d.id);
+  links.forEach(l => {
+    const sid = l.source.id || l.source;
+    const tid = l.target.id || l.target;
+    if (sid === d.id) connectedIds.add(tid);
+    if (tid === d.id) connectedIds.add(sid);
+  });
+
+  node.style("opacity", n => connectedIds.has(n.id) ? 1 : 0.15);
+  link.style("opacity", l => {
+    const sid = l.source.id || l.source;
+    const tid = l.target.id || l.target;
+    return (sid === d.id || tid === d.id) ? 0.8 : 0.03;
+  });
+  link.attr("stroke-width", l => {
+    const sid = l.source.id || l.source;
+    const tid = l.target.id || l.target;
+    return (sid === d.id || tid === d.id) ? 2.5 : 1;
+  });
+  edgeLabel.style("opacity", l => {
+    const sid = l.source.id || l.source;
+    const tid = l.target.id || l.target;
+    return (sid === d.id || tid === d.id) ? 1 : 0;
+  });
+})
+.on("mousemove", (event) => {
+  const pad = 15;
+  let x = event.clientX + pad;
+  let y = event.clientY + pad;
+  if (x + 330 > window.innerWidth) x = event.clientX - 330;
+  if (y + 200 > window.innerHeight) y = event.clientY - 200;
+  tooltip.style.left = x + "px";
+  tooltip.style.top = y + "px";
+})
+.on("mouseleave", () => {
+  tooltip.classList.remove("visible");
+  node.style("opacity", 1);
+  link.style("opacity", null)
+    .attr("stroke", d => getStroke(d.type))
+    .attr("stroke-width", d => d.type === "cross" ? 1.8 : 1);
+  edgeLabel.style("opacity", showEdgeLabels ? 0.7 : 0);
+});
+
+// Click to open URL
+node.filter(d => d.type === "work").style("cursor", "pointer")
+  .on("click", (event, d) => {
+    if (d.url && !event.defaultPrevented) window.open(d.url, "_blank");
+  });
+
+simulation.on("tick", () => {
+  link
+    .attr("x1", d => d.source.x)
+    .attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x)
+    .attr("y2", d => d.target.y);
+
+  edgeLabel
+    .attr("x", d => (d.source.x + d.target.x) / 2)
+    .attr("y", d => (d.source.y + d.target.y) / 2 - 4);
+
+  node.attr("transform", d => `translate(${d.x},${d.y})`);
+});
+
+function dragstarted(event) {
+  if (!event.active) simulation.alphaTarget(0.3).restart();
+  event.subject.fx = event.subject.x;
+  event.subject.fy = event.subject.y;
+}
+
+function dragged(event) {
+  event.subject.fx = event.x;
+  event.subject.fy = event.y;
+}
+
+function dragended(event) {
+  if (!event.active) simulation.alphaTarget(0);
+  event.subject.fx = null;
+  event.subject.fy = null;
+}
+
+function resetZoom() {
+  svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity);
+}
+
+function toggleLabels() {
+  showLabels = !showLabels;
+  labels.style("display", showLabels ? "block" : "none");
+}
+
+function toggleEdgeLabels() {
+  showEdgeLabels = !showEdgeLabels;
+  edgeLabel.style("opacity", showEdgeLabels ? 0.7 : 0);
+}
+
+function toggleTheme() {
+  document.body.classList.toggle("light");
+  // Re-apply strokes for new theme
+  link.attr("stroke", d => getStroke(d.type));
+  edgeLabel.attr("fill", getComputedStyle(document.body).getPropertyValue('--edge-label-fill').trim());
+
+  const s = getComputedStyle(document.body);
+  const isLight = document.body.classList.contains("light");
+
+  // Refresh time axis
+  d3.selectAll(".time-tick text").attr("fill", s.getPropertyValue('--subtitle').trim());
+  d3.selectAll(".time-tick line").attr("stroke", s.getPropertyValue('--chrono-stroke').trim());
+  d3.selectAll(".time-axis-line").attr("stroke", s.getPropertyValue('--chrono-stroke').trim());
+  d3.selectAll(".time-era").attr("fill", s.getPropertyValue('--subtitle').trim());
+
+  // Adjust node glow opacity for light background
+  node.selectAll("circle").filter(function() {
+    return +d3.select(this).attr("opacity") === 0.06 || +d3.select(this).attr("opacity") === 0.12;
+  }).attr("opacity", isLight ? 0.12 : 0.06);
+}
+</script>
+
+</body>
+</html>

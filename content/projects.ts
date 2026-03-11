@@ -10,6 +10,14 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    id: "mapier-ai",
+    title: "Mapier.ai",
+    meta: "Co-founder & Developer | Launching Soon",
+    summary: "The city's live feed of social and local life. Launching soon.",
+    links: [{ url: "https://www.mapier.ai/", label: "mapier.ai" }],
+    hasCaseStudy: false,
+  },
+  {
     id: "reste",
     title: "Resté",
     meta: "Co-founder & Developer | UChicago Vibe Coding Hackathon Runner-Up",
@@ -79,30 +87,6 @@ Next.js, Makey Makey, email integration
 
 **Outcome**
 A gamified hydration tracking system that automates water intake logging through physical interaction and builds habit formation through social reinforcement. The project demonstrates how playful, tangible interactions can solve real behavioral challenges better than screen-based apps alone.`,
-  },
-  {
-    id: "voice-ping-pong",
-    title: "Voice Ping Pong",
-    meta: "Developer | Intro to HCI",
-    summary: "Voice-controlled gaming with spatial audio — using voice commands to control gameplay and spatial sound to communicate ball position.",
-    links: [
-      {
-        url: "https://www.youtube.com/watch?v=wlkEUxtRtdg",
-        label: "Demo Video",
-      },
-    ],
-    hasCaseStudy: true,
-    content: `**Challenge**
-Traditional game interfaces rely on manual controllers, creating accessibility barriers and limiting alternative interaction models. The opportunity was to explore voice as a primary control mechanism while using spatial audio to communicate game state.
-
-**Approach**
-Built a voice-controlled ping pong game in Python where spoken commands control paddle position, power-ups, and menus. The key innovation: spatial audio that pans ball sounds left-right based on screen position, allowing players to track the ball through hearing rather than sight alone. The interaction design balanced natural speech patterns with responsive controls, while the audio system calculated real-time sound positioning to create an intuitive auditory representation of game space.
-
-**Technical Stack**
-Python, voice recognition, spatial audio processing
-
-**Outcome**
-A multimodal gaming experience proving that voice input and spatial audio can effectively replace traditional visual-manual controls, demonstrating accessible design principles while creating engaging alternative gameplay.`,
   },
   {
     id: "legoat-detector",
