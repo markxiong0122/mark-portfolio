@@ -227,14 +227,12 @@ export default function Home() {
                 creative computing toward a point where the maker disappears into
                 the system itself.
               </motion.p>
-              <a href="/vanishing-point/index.html" className="vanishing-point-wrapper" target="_blank" rel="noopener noreferrer">
-                <span className="vanishing-point-label">Interactive</span>
+              <div className="vanishing-point-wrapper">
                 <iframe
-                  src="/vanishing-point/index.html"
+                  src="/vanishing-point/embed.html"
                   title="Vanishing Point — Progressive Abstraction of Human Presence"
                 />
-                <span className="vanishing-point-overlay">View Full Screen</span>
-              </a>
+              </div>
             </motion.div>
           </section>
         </div>
