@@ -146,7 +146,7 @@ body::before {
 .hero-photo-wrapper {
   position: absolute;
   right: clamp(2rem, 8vw, 8rem);
-  bottom: 0;
+  bottom: clamp(3rem, 8vh, 6rem); /* Align with hero-inner padding-bottom so photo bottom = name bottom */
   width: clamp(180px, 22vw, 320px);
   z-index: 3;
   border: 2px solid var(--black);
@@ -469,10 +469,13 @@ audio:hover {
 }
 
 /* Vanishing Point */
-.vanishing-point-wrapper {
+a.vanishing-point-wrapper {
   position: relative;
   margin-top: clamp(2rem, 4vw, 4rem);
   border: 2px solid var(--black);
+  display: block;
+  text-decoration: none;
+  cursor: crosshair;
 }
 
 .vanishing-point-wrapper iframe {
@@ -480,6 +483,29 @@ audio:hover {
   width: 100%;
   height: clamp(400px, 50vw, 600px);
   border: none;
+  pointer-events: none; /* Let clicks pass through to the <a> */
+}
+
+.vanishing-point-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 10, 0);
+  color: var(--white);
+  font-family: var(--font-jetbrains), monospace;
+  font-size: clamp(0.7rem, 0.9vw, 0.85rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: all var(--transition-base);
+  z-index: 2;
+}
+
+.vanishing-point-wrapper:hover .vanishing-point-overlay {
+  opacity: 1;
+  background: rgba(10, 10, 10, 0.6);
 }
 
 .vanishing-point-label {
@@ -493,6 +519,7 @@ audio:hover {
   color: var(--accent);
   writing-mode: vertical-rl;
   transform: rotate(180deg);
+  z-index: 3;
 }
 
 /* ================================================================
