@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, JetBrains_Mono, Outfit } from "next/font/google";
+import { Cormorant_Garamond, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
@@ -11,16 +11,9 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600"],
-  variable: "--font-outfit",
-  display: "swap",
-});
-
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["300", "400"],
+  weight: ["300", "400", "500", "700"],
   variable: "--font-jetbrains",
   display: "swap",
 });
@@ -41,8 +34,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${outfit.variable} ${jetbrains.variable}`}
+      className={`${cormorant.variable} ${jetbrains.variable}`}
     >
+      <head>
+        <link
+          href="https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="antialiased">{children}</body>
       <Analytics />
     </html>
