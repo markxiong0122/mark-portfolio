@@ -125,6 +125,7 @@ body::before {
   color: var(--black);
   text-transform: uppercase;
   will-change: transform, letter-spacing;
+  margin-left: clamp(2rem, 4vw, 4rem); /* Clear the vertical subtitle */
 }
 
 .hero-subtitle {
@@ -145,8 +146,7 @@ body::before {
 .hero-photo-wrapper {
   position: absolute;
   right: clamp(2rem, 8vw, 8rem);
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: 0;
   width: clamp(180px, 22vw, 320px);
   z-index: 3;
   border: 2px solid var(--black);

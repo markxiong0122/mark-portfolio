@@ -230,7 +230,7 @@ export default function Home() {
               <div className="vanishing-point-wrapper">
                 <span className="vanishing-point-label">Interactive</span>
                 <iframe
-                  src="/vanishing-point/"
+                  src="/vanishing-point/index.html"
                   title="Vanishing Point — Progressive Abstraction of Human Presence"
                 />
               </div>

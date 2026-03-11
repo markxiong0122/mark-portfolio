@@ -65,7 +65,7 @@ Resté earned runner-up at the UChicago Vibe Coding Hackathon with a functional 
   {
     id: "drinkuplakemichigan",
     title: "DrinkUpLakeMichigan",
-    meta: "Interaction Designer & Developer | Class Project",
+    meta: "Interaction Designer & Developer | MADD 15403",
     summary: "Playful hydration tracking & habit formation through physical-digital integration. Automatically detects drinking behavior and enables social accountability.",
     links: [
       {
